@@ -11,7 +11,7 @@ client:on('offline', function() print('offline') end)
 client:on('message', function(_, topic, data)
     print(topic, ':', data)
 
-    if topic == 'lamp1_power' then
+    if topic == 'Device/Lamp11' then
         if data == 'ON' then
             gpio.write(BLUE_LED, 1)
         elseif data == 'OFF' then
@@ -21,10 +21,10 @@ client:on('message', function(_, topic, data)
 end)
 
 function connect()
-    client:connect('209.58.180.39', 1883, 0, function()
+    client:connect('135.181.248.74', 1883, 0, function()
         print('connected')
 
-        client:subscribe('lamp1_power', 0, function()
+        client:subscribe('Device/Lamp11', 0, function()
             print('subscribe success')
         end)
     end,
@@ -36,8 +36,8 @@ end
 wifi.mode(wifi.STATION)
 
 wifi.sta.config({
-    ssid  = 'AIS 4G Hi-Speed Home WiFi_166250',
-    pwd   = '50166250',
+    ssid  = 'ASEP Interface',
+    pwd   = 'asep2020',
     auto  = false
 })
 
