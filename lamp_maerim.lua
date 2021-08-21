@@ -1,4 +1,4 @@
-local BLUE_LED = 2
+local BLUE_LED = 13
 
 gpio.config({ gpio = BLUE_LED, dir = gpio.IN_OUT })
 gpio.write(BLUE_LED, 0)
