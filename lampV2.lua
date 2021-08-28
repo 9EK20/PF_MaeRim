@@ -1304,8 +1304,8 @@ end
 
 wifi.mode(wifi.STATION)
 wifi.sta.config({
-    ssid  = 'D-Link',
-    pwd   = '12345678',
+    ssid  = 'Polarbear_2.4G',
+    pwd   = 'chinabear',
     auto  = false
 })
 
