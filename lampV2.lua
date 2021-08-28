@@ -44,7 +44,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --     end)
 -- end
 
--- -- เขียน log เมื่อได้รับคำสั่ง restart จาก server
+-- -- เขียน log เมื่อ��ด้รับคำสั่ง restart จาก server
 -- local function logRestart()
 --   headers = {
 --     ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -60,7 +60,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --     end)
 -- end
 
--- -- รอรับคำสั่ง getFile จาก server
+-- -- รอรับคำสั่ง getFile ��าก server
 -- local function getFile()
 --   http.get("http://209.58.180.39/code/lua_update.php", function(code, data)
 --     if (code < 0) then
@@ -85,7 +85,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --   end)
 -- end
 
--- -- รอรับคำสั่ง Restart จาก server
+-- -- รอร��บคำสั่ง Restart จาก server
 -- local function getRestart()
 --   http.get("http://209.58.180.39/code/reset.php", function(code, data)
 --         node.restart()
@@ -99,7 +99,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --   end)
 -- end
 
--- บันทึกค่าตัวแปรไว้ในไฟล์ txt
+-- บันทึก��่าตัวแปรไว้ในไฟล์ txt
 local function saveVar()
   if file.open("start_time_1.txt","w+") then
     file.writeline(start_time_1)
@@ -251,7 +251,7 @@ local function saveVar()
   end
 end
 
--- รับค่าจากไฟล์ txt
+-- รั���ค่าจากไฟล์ txt
 local function getVar()
   fd = file.open("start_time_1.txt", "r")
   if fd then
@@ -512,7 +512,7 @@ local function logofflineTimeon()
   end
 end
 
--- เขียน log offline ตอนตั้งเวลาปิด
+-- เขียน log offline ตอนตั้งเวลาป���ด
 local function logofflineTimeoff()
   if statustf == "1" then
     if file.open(string.format('%s.%s','logoffline-timeoff1','txt'), "w+") then
@@ -544,7 +544,7 @@ local function logofflineTimeoff()
   end
 end
 
--- ตั้งค่าการทำงานหลังจากสถานะ offline
+-- ตั้งค่าการทำงานหลังจา���สถานะ offline
 local function offlineControl()
   print('Offline')
   getRtc()
@@ -780,7 +780,7 @@ local function offlineControl()
   end
 end
 
--- อัพเดท value หลังจากกลับมา online
+-- อั��เดท value หลังจากกล��บมา online
 local function uploadLogoffline()
   if statusto == "1" then
    headers = {
@@ -904,7 +904,7 @@ local function uploadLogoffline()
  end
 end
 
--- เขียน log online ตั้งเวลาเปิด
+-- เขียน log online ตั้ง��วลาเปิด
 local function logonlineTimeon()
   headers = {
     ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -1168,7 +1168,7 @@ local function control()
   end
 end
 
--- เขียน log online เปิด Switch
+-- เขียน log online ���ปิด Switch
 -- local function logonlineSwitchon()
 --   headers = {
 --     ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -1200,9 +1200,9 @@ end
 --     end)
 -- end
 
--- การทำงานในสถานะ online
+-- การทำงานใ���สถานะ online
 local function onlineControl()
-  -- เชื่อมต่อ API
+  -- เ���ื่อมต่อ API
   headers = {
     ["Content-Type"] = "application/x-www-form-urlencoded",
   }
@@ -1215,7 +1215,7 @@ local function onlineControl()
       else
         -- ถ้าต่อ API
         uploadLogoffline()
-        -- ถอดรหัสจาก API มาเก็บไว้ในตัวแปรเพื่อใช้ในการควบคุมหลอดไฟ
+        -- ��อดรหัสจาก API มาเก���บไว้ในตัวแปรเพื่อใช้ในการควบคุ���หลอดไฟ
         t = sjson.decode(data)
         for k,v in pairs(t) do
           if k == "name" then
@@ -1270,7 +1270,7 @@ local function onlineControl()
     end)
 end
 
--- อัพเดทเวลา
+-- อัพเดทเ���ลา
 local function updateClock(_time)
   if netstat == "1" then
     print('Online')
@@ -1304,12 +1304,12 @@ end
 
 wifi.mode(wifi.STATION)
 wifi.sta.config({
-    ssid  = 'Polarbear_2.4G',
-    pwd   = 'chinabear',
+    ssid  = 'D-Link',
+    pwd   = '12345678',
     auto  = false
 })
 
--- loop การทำงาน Online
+-- loop การท���งาน Online
 wifi.sta.on('got_ip', function()
   netstat = "1"
   checktime = "1"
@@ -1335,4 +1335,4 @@ end)
 
 wifi.start()
 wifi.sta.connect()
-print('hello world')
+print("hello world")
