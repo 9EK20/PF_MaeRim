@@ -1335,3 +1335,4 @@ end)
 
 wifi.start()
 wifi.sta.connect()
+print('hello world')
