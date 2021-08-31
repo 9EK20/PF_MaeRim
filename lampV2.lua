@@ -1,15 +1,23 @@
-local id, sda, scl, device = 0, 26, 27, 0x68
+local id, sda, scl, device = 0, 21, 22, 0x68
 local BLUE_LED = 2
 local name,value,start_time_1,end_time_1,start_time_2,end_time_2
 ,start_time_3,end_time_3,start_time_4,end_time_4,timeStr,dateStr,rtctime,rtcdate,getlogTimeon,getlogTimeoff,
-value_1,value_2,value_3,value_4,rtcHr,rtcMin
-local netstat = "0"
+value_1,value_2,value_3,value_4,rtcHr,rtcMin,light_value
+netstat = "0"
 getlogTimeon2 = " "
 getlogTimeoff2 = " "
 getlogTimeon3 = " "
 getlogTimeoff3 = " "
 getlogTimeon4 = " "
 getlogTimeoff4 = " "
+logon = "0"
+logon2 = "0"
+logon3 = "0"
+logon4 = "0"
+logoff = "0"
+logoff2 = "0"
+logoff3 = "0"
+logoff4 = "0"
 statusto = "0"
 statustf = "0"
 statusto2 = "0"
@@ -18,10 +26,10 @@ statusto3 = "0"
 statustf3 = "0"
 statusto4 = "0"
 statustf4 = "0"
-local checktime = "0"
+checktime = "0"
 local count_on = 0
 local count_off = 0
-local sw_name = "shelf_1_2"
+local sw_name = "shelf_2_1"
 local api = "capi"
 timerstep = 1
 gpio.config({ gpio = BLUE_LED, dir = gpio.IN_OUT })
@@ -44,7 +52,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --     end)
 -- end
 
--- -- เขียน log เมื่อ��ด้รับคำสั่ง restart จาก server
+-- -- เขียน log เมื่อได้รับคำสั่ง restart จาก server
 -- local function logRestart()
 --   headers = {
 --     ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -60,7 +68,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --     end)
 -- end
 
--- -- รอรับคำสั่ง getFile ��าก server
+-- -- รอรับคำสั่ง getFile จาก server
 -- local function getFile()
 --   http.get("http://209.58.180.39/code/lua_update.php", function(code, data)
 --     if (code < 0) then
@@ -85,7 +93,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --   end)
 -- end
 
--- -- รอร��บคำสั่ง Restart จาก server
+-- -- รอรับคำสั่ง Restart จาก server
 -- local function getRestart()
 --   http.get("http://209.58.180.39/code/reset.php", function(code, data)
 --         node.restart()
@@ -99,7 +107,7 @@ i2c.setup(id, sda, scl, i2c.SLOW)
 --   end)
 -- end
 
--- บันทึก��่าตัวแปรไว้ในไฟล์ txt
+-- บันทึกค่าตัวแปรไว้ในไฟล์ txt
 local function saveVar()
   if file.open("start_time_1.txt","w+") then
     file.writeline(start_time_1)
@@ -251,7 +259,7 @@ local function saveVar()
   end
 end
 
--- รั���ค่าจากไฟล์ txt
+-- รับค่าจากไฟล์ txt
 local function getVar()
   fd = file.open("start_time_1.txt", "r")
   if fd then
@@ -410,52 +418,42 @@ local function getVar()
   end
   fd = file.open("logoffline-timeon1.txt", "r")
   if fd then
-    getlogTimeon = fd:read(33)
+    getlogTimeon = fd:read(35)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeoff1.txt", "r")
   if fd then
-    getlogTimeoff = fd:read(34)
-    fd:close(); fd = nil
-  end
-  fd = file.open("logoffline-timeon1.txt", "r")
-  if fd then
-    getlogTimeon = fd:read(33)
-    fd:close(); fd = nil
-  end
-  fd = file.open("logoffline-timeoff1.txt", "r")
-  if fd then
-    getlogTimeoff = fd:read(34)
+    getlogTimeoff = fd:read(36)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeon2.txt", "r")
   if fd then
-    getlogTimeon2 = fd:read(33)
+    getlogTimeon2 = fd:read(35)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeoff2.txt", "r")
   if fd then
-    getlogTimeoff2 = fd:read(34)
+    getlogTimeoff2 = fd:read(36)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeon3.txt", "r")
   if fd then
-    getlogTimeon3 = fd:read(33)
+    getlogTimeon3 = fd:read(35)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeoff3.txt", "r")
   if fd then
-    getlogTimeoff3 = fd:read(34)
+    getlogTimeoff3 = fd:read(36)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeon4.txt", "r")
   if fd then
-    getlogTimeon4 = fd:read(33)
+    getlogTimeon4 = fd:read(35)
     fd:close(); fd = nil
   end
   fd = file.open("logoffline-timeoff4.txt", "r")
   if fd then
-    getlogTimeoff4 = fd:read(34)
+    getlogTimeoff4 = fd:read(36)
     fd:close(); fd = nil
   end
 end
@@ -482,75 +480,113 @@ local function getRtc()
 end
 
 local function logofflineTimeon()
-  if statusto == "1" then
+  if logon == "1" then
     if file.open(string.format('%s.%s','logoffline-timeon1','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time ON'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer1 ON'))
       file.close()
       print('write file')
     end
+    logon = "0"
   end
-  if statusto2 == "1" then
+  if logon2 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeon2','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time ON'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer2 ON'))
       file.close()
       print('write file')
     end
+    logon2 = "0"
   end
-  if statusto3 == "1" then
+  if logon3 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeon3','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time ON'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer3 ON'))
       file.close()
       print('write file')
     end
+    logon3 = "0"
   end
-  if statusto4 == "1" then
+  if logon4 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeon4','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time ON'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer4 ON'))
       file.close()
       print('write file')
     end
+    logon4 = "0"
   end
 end
 
--- เขียน log offline ตอนตั้งเวลาป���ด
+-- เขียน log offline ตอนตั้งเวลาปิด
 local function logofflineTimeoff()
-  if statustf == "1" then
+  if logoff == "1" then
     if file.open(string.format('%s.%s','logoffline-timeoff1','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time OFF'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer1 OFF'))
       file.close()
       print('write file')
     end
+    logoff = "0"
   end
-  if statustf2 == "1" then
+  if logoff2 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeoff2','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time OFF'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer2 OFF'))
       file.close()
       print('write file')
     end
+    logoff2 = "0"
   end
-  if statustf3 == "1" then
+  if logoff3 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeoff3','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time OFF'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer3 OFF'))
       file.close()
       print('write file')
     end
+    logoff3 = "0"
   end
-  if statustf4 == "1" then
+  if logoff4 == "1" then
     if file.open(string.format('%s.%s','logoffline-timeoff4','txt'), "w+") then
-      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Time OFF'))
+      file.writeline(string.format('%s %s %s %s','Offline',rtcdate,rtctime,'Timer4 OFF'))
       file.close()
       print('write file')
     end
+    logoff4 = "0"
   end
 end
 
--- ตั้งค่าการทำงานหลังจา���สถานะ offline
+local function updatestatusOn()
+  headers = {
+    ["Content-Type"] = "application/x-www-form-urlencoded",
+  }
+  body = string.format('%s=%s&%s=%s', 'name',sw_name,'light_value','1')
+  http.post(string.format('%s%s%s','http://209.58.180.39/',api,'/light2/updatelightvalue.php'), { headers = headers }, body,
+    function(code, data)
+      if (code < 0) then
+        print("HTTP request failed")
+      else
+        print(data)
+      end
+    end)
+end
+
+local function updatestatusOff()
+  headers = {
+    ["Content-Type"] = "application/x-www-form-urlencoded",
+  }
+  body = string.format('%s=%s&%s=%s', 'name',sw_name,'light_value','0')
+  http.post(string.format('%s%s%s','http://209.58.180.39/',api,'/light2/updatelightvalue.php'), { headers = headers }, body,
+    function(code, data)
+      if (code < 0) then
+        print("HTTP request failed")
+      else
+        print(data)
+      end
+    end)
+end
+
+-- ตั้งค่าการทำงานหลังจากสถานะ offline
 local function offlineControl()
   print('Offline')
   getRtc()
   getVar()
   if value == "1" then
-    print('Switch ON')
+    print('Main Switch ON')
     if timerstep == 1 then
       if value_1 == "1" then
         print(string.format('%s - %s','timer1 start',start_time_1))
@@ -565,7 +601,9 @@ local function offlineControl()
           if count_off == 1 then
             print('Time1 OFF')
             statustf = "1"
+            logoff = "1"
             logofflineTimeoff()
+            saveVar()
           end
         elseif hrend_time1 == rtcHr and minend_time1 <= rtcMin then
           timerstep = 2
@@ -577,7 +615,9 @@ local function offlineControl()
           if count_off == 1 then
             print('Time1 OFF')
             statustf = "1"
+            logoff = "1"
             logofflineTimeoff()
+            saveVar()
           end
         elseif hrstart_time1 < rtcHr then
           if count_on < 2 then
@@ -588,7 +628,9 @@ local function offlineControl()
           if count_on == 1 then
             print('Time1 ON')
             statusto = "1"
+            logon = "1"
             logofflineTimeon()
+            saveVar()
           end   
         elseif hrstart_time1 == rtcHr and minstart_time1 <= rtcMin then
           if count_on < 2 then
@@ -599,8 +641,12 @@ local function offlineControl()
           if count_on == 1 then
             print('Time1 ON')
             statusto = "1"
+            logon = "1"
             logofflineTimeon()
+            saveVar()
           end   
+        else
+          gpio.write(BLUE_LED, 0)
         end      
       else
         gpio.write(BLUE_LED, 0)
@@ -620,7 +666,9 @@ local function offlineControl()
           if count_off == 1 then
             print('Time2 OFF')
             statustf2 = "1"
+            logoff2 = "1"
             logofflineTimeoff()
+            saveVar()
           end 
         elseif hrend_time2 == rtcHr and minend_time2 <= rtcMin then
           timerstep = 3
@@ -632,7 +680,9 @@ local function offlineControl()
           if count_off == 1 then
             print('Time2 OFF')
             statustf2 = "1"
+            logoff2 = "1"
             logofflineTimeoff()
+            saveVar()
           end 
         elseif hrstart_time2 < rtcHr then
           if count_on < 2 then
@@ -643,7 +693,9 @@ local function offlineControl()
           if count_on == 1 then
             print('Time2 ON')
             statusto2 = "1"
+            logon2 = "1"
             logofflineTimeon()
+            saveVar()
           end
         elseif hrstart_time2 == rtcHr and minstart_time2 <= rtcMin then
           if count_on < 2 then
@@ -654,8 +706,12 @@ local function offlineControl()
           if count_on == 1 then
             print('Time2 ON')
             statusto2 = "1"
+            logon2 = "1"
             logofflineTimeon()
+            saveVar()
           end
+        else
+          gpio.write(BLUE_LED, 0)
         end   
       else
         gpio.write(BLUE_LED, 0)
@@ -674,8 +730,10 @@ local function offlineControl()
           gpio.write(BLUE_LED, 0)
           if count_off == 1 then
             print('Time3 OFF')
+            logoff3 = "1"
             statustf3 = "1"
             logofflineTimeoff()
+            saveVar()
           end
         elseif hrend_time3 == rtcHr and minend_time3 <= rtcMin then
           timerstep = 4
@@ -687,7 +745,9 @@ local function offlineControl()
           if count_off == 1 then
             print('Time3 OFF')
             statustf3 = "1"
+            logoff3 = "1"
             logofflineTimeoff()  
+            saveVar()
           end
         elseif hrstart_time3 < rtcHr then
           if count_on < 2 then
@@ -697,8 +757,10 @@ local function offlineControl()
           gpio.write(BLUE_LED, 1)
           if count_on == 1 then
             print('Time3 ON')
+            logon3 = "1"
             statusto3 = "1"
             logofflineTimeon() 
+            saveVar()
           end
         elseif hrstart_time3 == rtcHr and minstart_time3 <= rtcMin then
           if count_on < 2 then
@@ -708,9 +770,13 @@ local function offlineControl()
           count_off = 0
           if count_on == 1 then
             print('Time3 ON')
+            logon3 = "1"
             statusto3 = "1"
             logofflineTimeon() 
+            saveVar()
           end
+        else
+          gpio.write(BLUE_LED, 0)
         end    
       else
         gpio.write(BLUE_LED, 0)
@@ -721,7 +787,7 @@ local function offlineControl()
         print(string.format('%s - %s','timer4 start',start_time_4))
         print(string.format('%s - %s','timer4 end',end_time_4))
         if hrend_time4 < rtcHr then
-          timerstep = 1
+          timerstep = 1 
           if count_off < 2 then
             count_off = count_off + 1
           end
@@ -729,8 +795,10 @@ local function offlineControl()
           gpio.write(BLUE_LED, 0)
           if count_off == 1 then
             print('Time4 OFF')
+            logoff4 = "1"
             statustf4 = "1"
-            logofflineTimeoff()    
+            logofflineTimeoff()   
+            saveVar()
           end
         elseif hrend_time4 == rtcHr and minend_time4 <= rtcMin then
           timerstep = 1
@@ -741,8 +809,10 @@ local function offlineControl()
           gpio.write(BLUE_LED, 0)
           if count_off == 1 then
             print('Time4 OFF')
+            logoff4 = "1"
             statustf4 = "1"
-            logofflineTimeoff()    
+            logofflineTimeoff()   
+            saveVar() 
           end
         elseif hrstart_time4 < rtcHr then
           if count_on < 2 then
@@ -752,8 +822,10 @@ local function offlineControl()
           gpio.write(BLUE_LED, 1)
           if count_on == 1 then
             print('Time4 ON')
+            logon4 = "1"
             statusto4 = "1"
-            logofflineTimeon()    
+            logofflineTimeon()   
+            saveVar() 
           end
         elseif hrstart_time4 == rtcHr and minstart_time4 <= rtcMin then
           if count_on < 2 then
@@ -763,9 +835,13 @@ local function offlineControl()
           gpio.write(BLUE_LED, 1)
           if count_on == 1 then
             print('Time4 ON')
+            logon4 = "1"
             statusto4 = "1"
             logofflineTimeon() 
+            saveVar()
           end
+        else
+          gpio.write(BLUE_LED, 0)
         end 
       else 
         gpio.write(BLUE_LED, 0)
@@ -773,14 +849,13 @@ local function offlineControl()
       end
     end
   else
-    print('Switch OFF')
+    print('Main Switch OFF')
     gpio.write(BLUE_LED, 0)
     count_off = 0
     count_on = 0
   end
 end
 
--- อั��เดท value หลังจากกล��บมา online
 local function uploadLogoffline()
   if statusto == "1" then
    headers = {
@@ -795,7 +870,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statusto = "0"
  end
  if statustf == "1" then
    headers = {
@@ -810,7 +884,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statustf = "0"
  end
   if statusto2 == "1" then
    headers = {
@@ -825,7 +898,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statusto2 = "0"
  end
  if statustf2 == "1" then
    headers = {
@@ -840,7 +912,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statustf2 = "0"
  end
   if statusto3 == "1" then
    headers = {
@@ -855,7 +926,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statusto3 = "0"
  end
  if statustf3 == "1" then
    headers = {
@@ -870,7 +940,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statustf3 = "0"
  end
   if statusto4 == "1" then
    headers = {
@@ -885,7 +954,6 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statusto4 = "0"
  end
  if statustf4 == "1" then
    headers = {
@@ -900,32 +968,102 @@ local function uploadLogoffline()
          print(data)
        end
      end)
-     statustf4 = "0"
  end
+ if statustf == "1" or statustf2 == "1" or statustf3 == "1" or statustf4 == "1"  then
+  updatestatusOff()
+  statustf = "0"
+  statustf2 = "0"
+  statustf3 = "0"
+  statustf4 = "0"
+  saveVar()
+ end
+ if statusto == "1" or statusto2 == "1" or statusto3 == "1" or statusto4 == "1" then
+  updatestatusOn()
+  statusto = "0"
+  statusto2 = "0"
+  statusto3 = "0"
+  statusto4 = "0"
+  saveVar()
+  end
 end
 
--- เขียน log online ตั้ง��วลาเปิด
+-- เขียน log online ตั้งเวลาเปิด
 local function logonlineTimeon()
-  headers = {
-    ["Content-Type"] = "application/x-www-form-urlencoded",
-  }
-  body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Time ON')
-  http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
-    function(code, data)
-      if (code < 0) then
-        print("HTTP request failed")
-      else
-        print(data)
-      end
-    end)
+  if timerstep == 1 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer1 ON')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  elseif timerstep == 2 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer2 ON')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  elseif timerstep == 3 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer3 ON')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  elseif timerstep == 4 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer4 ON')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  end
 end
 
 -- เขียน log online ตั้งเวลาปิด
 local function logonlineTimeoff()
+  if timerstep == 1 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer4 OFF')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  elseif timerstep == 2 then
   headers = {
     ["Content-Type"] = "application/x-www-form-urlencoded",
   }
-  body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Time OFF')
+  body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer1 OFF')
   http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
     function(code, data)
       if (code < 0) then
@@ -934,11 +1072,38 @@ local function logonlineTimeoff()
         print(data)
       end
     end)
+  elseif timerstep == 3 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer2 OFF')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  elseif timerstep == 4 then
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s-%s&%s=%s %s %s','fname',sw_name,rtcdate,'line','Online',rtctime,'Timer3 OFF')
+    http.post("http://209.58.180.39/log/line.php", { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  end
 end
 
 local function control()
   if value == "1" then
-    print('Switch ON')
+    print('Main Switch ON')
     if timerstep == 1 then
       if value_1 == "1" then
         print(string.format('%s - %s','timer1 start',start_time_1))
@@ -953,6 +1118,7 @@ local function control()
           if count_off == 1 then
             print('Time1 OFF')
             -- Log Online
+            updatestatusOff()
             logonlineTimeoff()
           end
         elseif hrend_time1 == rtcHr and minend_time1 <= rtcMin then
@@ -965,6 +1131,7 @@ local function control()
           if count_off == 1 then
             print('Time1 OFF')
             -- Log Online
+            updatestatusOff()
             logonlineTimeoff()
           end
         elseif hrstart_time1 < rtcHr then
@@ -976,6 +1143,7 @@ local function control()
           if count_on == 1 then
             print('Time1 ON')
             -- Log Online
+            updatestatusOn()
             logonlineTimeon() 
           end   
         elseif hrstart_time1 == rtcHr and minstart_time1 <= rtcMin then
@@ -987,11 +1155,16 @@ local function control()
           if count_on == 1 then
             print('Time1 ON')
             -- Log Online
+            updatestatusOn()
             logonlineTimeon() 
           end   
+        else 
+          gpio.write(BLUE_LED, 0)
+          updatestatusOff()
         end      
       else
         gpio.write(BLUE_LED, 0)
+        updatestatusOff()
         timerstep = 2
       end    
     elseif timerstep == 2 then
@@ -1008,6 +1181,7 @@ local function control()
           if count_off == 1 then
             print('Time2 OFF')
             -- Log Online
+            updatestatusOff()
             logonlineTimeoff()  
           end 
         elseif hrend_time2 == rtcHr and minend_time2 <= rtcMin then
@@ -1020,6 +1194,7 @@ local function control()
           if count_off == 1 then
             print('Time2 OFF')
             -- Log Online
+            updatestatusOff()
             logonlineTimeoff()  
           end 
         elseif hrstart_time2 < rtcHr then
@@ -1031,6 +1206,7 @@ local function control()
           if count_on == 1 then
             print('Time2 ON')
             -- Log Online
+            updatestatusOn()
             logonlineTimeon() 
           end
         elseif hrstart_time2 == rtcHr and minstart_time2 <= rtcMin then
@@ -1042,11 +1218,16 @@ local function control()
           if count_on == 1 then
             print('Time2 ON')
             -- Log Online
+            updatestatusOn()
             logonlineTimeon() 
           end
+        else 
+          gpio.write(BLUE_LED, 0)
+          updatestatusOff()
         end   
       else
         gpio.write(BLUE_LED, 0)
+        updatestatusOff()
         timerstep = 3
       end    
     elseif timerstep == 3 then
@@ -1064,9 +1245,10 @@ local function control()
             print('Time3 OFF')
             -- Log Online
             logonlineTimeoff()   
+            updatestatusOff()
           end
         elseif hrend_time3 == rtcHr and minend_time3 <= rtcMin then
-          timerstep = 4
+          timerstep = 4   
           if count_off < 2 then
             count_off = count_off + 1
           end
@@ -1075,7 +1257,8 @@ local function control()
           if count_off == 1 then
             print('Time3 OFF')
             -- Log Online
-            logonlineTimeoff()   
+            logonlineTimeoff()
+            updatestatusOff()
           end
         elseif hrstart_time3 < rtcHr then
           if count_on < 2 then
@@ -1087,6 +1270,7 @@ local function control()
             print('Time3 ON')
             -- Log Online
             logonlineTimeon() 
+            updatestatusOn()
           end
         elseif hrstart_time3 == rtcHr and minstart_time3 <= rtcMin then
           if count_on < 2 then
@@ -1098,10 +1282,15 @@ local function control()
             print('Time3 ON')
             -- Log Online
             logonlineTimeon() 
+            updatestatusOn()
           end
+        else
+          gpio.write(BLUE_LED, 0)
+          updatestatusOff()
         end    
       else
         gpio.write(BLUE_LED, 0)
+        updatestatusOff()
         timerstep = 4
       end    
     elseif timerstep == 4 then
@@ -1118,7 +1307,8 @@ local function control()
           if count_off == 1 then
             print('Time4 OFF')
             -- Log Online
-            logonlineTimeoff()   
+            updatestatusOff()
+            logonlineTimeoff()  
           end
         elseif hrend_time4 == rtcHr and minend_time4 <= rtcMin then
           timerstep = 1
@@ -1130,6 +1320,7 @@ local function control()
           if count_off == 1 then
             print('Time4 OFF')
             -- Log Online
+            updatestatusOff()
             logonlineTimeoff()   
           end
         elseif hrstart_time4 < rtcHr then
@@ -1142,6 +1333,7 @@ local function control()
             print('Time4 ON')
             -- Log Online
             logonlineTimeon() 
+            updatestatusOn()
           end
         elseif hrstart_time4 == rtcHr and minstart_time4 <= rtcMin then
           if count_on < 2 then
@@ -1153,22 +1345,28 @@ local function control()
             print('Time4 ON')
             -- Log Online
             logonlineTimeon() 
+            updatestatusOn()
           end
+        else
+          gpio.write(BLUE_LED, 0)
+          updatestatusOff()
         end 
       else 
         gpio.write(BLUE_LED, 0)
+        updatestatusOff()
         timerstep = 1
       end
     end
   else
-    print('Switch OFF')
+    print('Main Switch OFF')
     gpio.write(BLUE_LED, 0)
+    updatestatusOff()
     count_off = 0
     count_on = 0
   end
 end
 
--- เขียน log online ���ปิด Switch
+-- เขียน log online เปิด Switch
 -- local function logonlineSwitchon()
 --   headers = {
 --     ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -1200,9 +1398,9 @@ end
 --     end)
 -- end
 
--- การทำงานใ���สถานะ online
+-- การทำงานในสถานะ online
 local function onlineControl()
-  -- เ���ื่อมต่อ API
+  -- เชื่อมต่อ API
   headers = {
     ["Content-Type"] = "application/x-www-form-urlencoded",
   }
@@ -1213,9 +1411,9 @@ local function onlineControl()
         print("HTTP request failed")
         offlineControl()
       else
-        -- ถ้าต่อ API
+        -- ถ้าต่อ API ได้
         uploadLogoffline()
-        -- ��อดรหัสจาก API มาเก���บไว้ในตัวแปรเพื่อใช้ในการควบคุ���หลอดไฟ
+        -- ถอดรหัสจาก API มาเก็บไว้ในตัวแปรเพื่อใช้ในการควบคุมหลอดไฟ
         t = sjson.decode(data)
         for k,v in pairs(t) do
           if k == "name" then
@@ -1246,6 +1444,8 @@ local function onlineControl()
             start_time_4 = v
           elseif k == "end_time_4" then
             end_time_4 = v
+          elseif k == "light_value" then
+            light_value = value
           end
         end
         hrstart_time1 = tonumber(string.sub(start_time_1,1,-7))
@@ -1270,7 +1470,7 @@ local function onlineControl()
     end)
 end
 
--- อัพเดทเ���ลา
+-- อัพเดทเวลา
 local function updateClock(_time)
   if netstat == "1" then
     print('Online')
@@ -1304,12 +1504,12 @@ end
 
 wifi.mode(wifi.STATION)
 wifi.sta.config({
-    ssid  = 'Polarbear_2.4G',
-    pwd   = 'chinabear',
+    ssid  = 'D-Link',
+    pwd   = '12345678',
     auto  = false
 })
 
--- loop การท���งาน Online
+-- loop การทำงาน Online
 wifi.sta.on('got_ip', function()
   netstat = "1"
   checktime = "1"
@@ -1335,4 +1535,3 @@ end)
 
 wifi.start()
 wifi.sta.connect()
-print("hello world")
