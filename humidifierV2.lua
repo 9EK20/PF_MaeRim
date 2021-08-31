@@ -12,7 +12,7 @@ local humidifier = 26
 local fan = 27
 local pin = 4
 gpio.config({gpio={BLUE_LED, humidifier, fan}, dir=gpio.OUT })
-gpio.write(BLUE_LED, 0)
+--gpio.write(BLUE_LED, 0)
 gpio.write(humidifier, 0)
 gpio.write(fan, 0)
 
@@ -71,8 +71,9 @@ wifi.sta.config({
 
 wifi.start()
 -- wifi.sta.connect()
-wifi.sta.on('connected', function(ev, info)
-    print("NodeMCU IP config:", info.ip, "netmask", info.netmask, "gw", info.gw)
+wifi.sta.on('got_ip', function()
+    print('WiFi connected')
+    gpio.write(BLUE_LED, 1)
 end)
 
 post()

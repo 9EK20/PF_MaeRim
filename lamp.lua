@@ -260,7 +260,7 @@ local function offline_Control()
     value = "0"
     statustf = "1"
     saveVar()
-    -- เ��ี��น log
+    -- เขียน log
     logoffline_Timeoff()
   end
 end
@@ -490,4 +490,4 @@ wifi.sta.on('disconnected', function()
 end)
 
 wifi.start()
-wifi.sta.connect(
+wifi.sta.connect()
