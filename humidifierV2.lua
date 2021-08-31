@@ -1,10 +1,11 @@
 --[humidifierV2.lua]
 --initial variable
 -- require('include')
-local ssid = 'AIS 4G Hi-Speed Home WiFi_166250'
-local password = '50166250'
+local ssid = '9ek'
+local password = 'ek183129'
 local apiHostname = 'http://209.58.180.39/capi/setting/readone.php'
 local status, temp, humi, temp_dec, humi_dec
+setpoint = 0
 
 --initial port and pin
 local BLUE_LED = 2
@@ -16,7 +17,7 @@ gpio.config({gpio={BLUE_LED, humidifier, fan}, dir=gpio.OUT })
 gpio.write(humidifier, 0)
 gpio.write(fan, 0)
 
-local function post()
+local function getSetpoint()
     headers = {
         ["Content-Type"] = "application/x-www-form-urlencoded",
     }
@@ -31,12 +32,12 @@ local function post()
         t = sjson.decode(data)
         for k,v in pairs(t) do
             if k == 'value' then
-                print(v)
+                -- print(v)
             end
         end
         end
-        
     end)
+    return v
 end
 
 local function readHumidity()
@@ -76,12 +77,13 @@ wifi.sta.on('got_ip', function()
     gpio.write(BLUE_LED, 1)
 end)
 
-post()
-readHumidity()
+local timer = tmr.create()
+-- Register auto-repeating 1000 ms (1 sec) timer
+timer:register(1000, tmr.ALARM_AUTO, function()
+    setpoint = getSetpoint()
+    -- readHumidity()
+    print(setpoint)
+end)
 
-
-
-
-
-
-
+-- Start timer
+timer:start()
