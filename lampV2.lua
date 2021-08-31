@@ -21,7 +21,7 @@ statustf4 = "0"
 local checktime = "0"
 local count_on = 0
 local count_off = 0
-local sw_name = "shelf_1_1"
+local sw_name = "shelf_1_2"
 local api = "capi"
 timerstep = 1
 gpio.config({ gpio = BLUE_LED, dir = gpio.IN_OUT })
@@ -1304,8 +1304,8 @@ end
 
 wifi.mode(wifi.STATION)
 wifi.sta.config({
-    ssid  = 'D-Link',
-    pwd   = '12345678',
+    ssid  = 'Polarbear_2.4G',
+    pwd   = 'chinabear',
     auto  = false
 })
 
