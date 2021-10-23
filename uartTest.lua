@@ -1,0 +1,16 @@
+local timer0 = tmr.create()
+gpio.config({gpio = 2, dir = gpio.OUT})
+gpio.write(2, 0)
+-- uart.setup(2, 115200, 8, uart.PARITY_NONE, uart.STOPBITS_1, {tx = 16, rx = 17})
+--print (uart.getconfig(2))
+print('UART Sent success')
+gpio.write(2, 1)
+gpio.write(2, 0)
+
+timer0:register(2000, tmr.ALARM_AUTO, function()
+    uart.setup(2, 115200, 8, uart.PARITY_NONE, uart.STOPBITS_1, {tx = 16, rx = 17})
+    print (uart.getconfig(2))
+    uart.write(2, "Hello, world\n")    
+end)
+
+timer0:start()

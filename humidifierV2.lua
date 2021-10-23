@@ -1,8 +1,8 @@
 --[humidifierV2.lua]
 --initial variable
 -- require('include')
-local ssid = '9ek'
-local password = 'ek183129'
+local ssid = 'ASEP Interface'
+local password = 'asep2020'
 local apiHostname = 'http://209.58.180.39/capi/setting/readone.php'
 local status, temp, humi, temp_dec, humi_dec
 setpoint = 0
@@ -17,6 +17,23 @@ gpio.config({gpio={BLUE_LED, humidifier, fan}, dir=gpio.OUT })
 gpio.write(humidifier, 0)
 gpio.write(fan, 0)
 
+local function readSetpoint()
+    fd = file.open("Setpoint.txt", "r")
+    if fd then
+         sp = fd:read(2)
+         fd:close(); fd = nil
+    end
+    return tonumber(sp)
+end
+
+local function saveSetpoint(hdata)
+    if (tonumber(hdata) > 0) and (tonumber(hdata) ~= readSetpoint()) then
+        file.open("Setpoint.txt","w+")
+        file.writeline(hdata)
+        file.close()
+    end
+end
+
 local function getSetpoint()
     headers = {
         ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -28,17 +45,20 @@ local function getSetpoint()
         if (code < 0) then
         print("HTTP request failed")
         else
-        print(code, data)
+        -- print(code, data)
         t = sjson.decode(data)
         for k,v in pairs(t) do
             if k == 'value' then
-                -- print(v)
+                -- print('get value ='..v)
+                -- setpoint = v
+                saveSetpoint(v)
             end
         end
         end
-    end)
-    return v
+    end)  
 end
+
+
 
 local function readHumidity()
     status, temp, humi, temp_dec, humi_dec = dht.read2x(pin)
@@ -58,8 +78,24 @@ local function readHumidity()
         print( "DHT Checksum error." )
     elseif status == dht.ERROR_TIMEOUT then
         print( "DHT timed out." )
+        humi = mySetpoint
     end
 end
+
+local function updateHumidity()
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s', 'rh',tostring(humi))
+    http.post('http://209.58.180.39/capi/moisture/create.php', { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  end
 
 --Connect WiFi
 wifi.mode(wifi.STATION)
@@ -77,13 +113,27 @@ wifi.sta.on('got_ip', function()
     gpio.write(BLUE_LED, 1)
 end)
 
-local timer = tmr.create()
+local timer0 = tmr.create()
+local timer1 = tmr.create()
 -- Register auto-repeating 1000 ms (1 sec) timer
-timer:register(1000, tmr.ALARM_AUTO, function()
-    setpoint = getSetpoint()
-    -- readHumidity()
-    print(setpoint)
+timer0:register(10000, tmr.ALARM_AUTO, function()
+    getSetpoint()
+end)
+
+timer1:register(10000, tmr.ALARM_AUTO, function()
+    mySetpoint = readSetpoint()
+    readHumidity()
+    updateHumidity()
+    print('mysetpoint = '..mySetpoint)
+    if humi < (mySetpoint) then
+        gpio.write(fan, 1)
+        gpio.write(humidifier, 1)
+    elseif humi > (mySetpoint + 1) then
+        gpio.write(fan, 0)
+        gpio.write(humidifier, 0)
+    end
 end)
 
 -- Start timer
-timer:start()
+timer0:start()
+timer1:start()
