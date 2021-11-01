@@ -97,6 +97,27 @@ local function updateHumidity()
       end)
   end
 
+  local function updateTemperature()
+    headers = {
+      ["Content-Type"] = "application/x-www-form-urlencoded",
+    }
+    body = string.format('%s=%s', 'degree',tostring(temp))
+    http.post('http://209.58.180.39/capi/temp/create.php', { headers = headers }, body,
+      function(code, data)
+        if (code < 0) then
+          print("HTTP request failed")
+        else
+          print(data)
+        end
+      end)
+  end
+
+
+
+
+
+
+
 --Connect WiFi
 wifi.mode(wifi.STATION)
 
@@ -124,6 +145,7 @@ timer1:register(10000, tmr.ALARM_AUTO, function()
     mySetpoint = readSetpoint()
     readHumidity()
     updateHumidity()
+    updateTemperature()
     print('mysetpoint = '..mySetpoint)
     if humi < (mySetpoint) then
         gpio.write(fan, 1)
